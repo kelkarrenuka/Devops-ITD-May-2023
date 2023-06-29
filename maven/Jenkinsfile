@@ -30,7 +30,7 @@ pipeline {
           // war: ‘target/*.war’ –> Your war file name
         deploy adapters: [tomcat9(credentialsId: 'tomcat_deploy', 
 			path: '', url: 'http://43.204.30.195:8080/')], 
-		contextPath: 'itdefined-war-1.0.0', 
+		contextPath: 'itdefined-war-1.0.0',
 		war: 'maven/simple-war/target/itdefined-war-1.0.0.war'
         }
       }
