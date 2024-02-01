@@ -1,0 +1,559 @@
+Docker 
+
+            Docker is one of the tools that used the idea of isolated resources to create a container that allows applications to be packaged with all the dependencies installed and run wherever we wanted.
+
+Docker can only run on Linux machines which means I can’t install Docker directly on Windows or any other OS. If I want to install Docker on Windows then I need to run a Linux VM in Windows on top that I need to run Docker.
+
+Virtualization (VM)
+
+VM is way of running virtual OS on top a host OS using a special software called Hypervisor. 
+VM directly shares the hardware of the host OS. 
+Virtualization	Containerization
+Virtualization at hardware level	Virtualization at OS level
+Heavyweight – VM carry complete operating system  	Lightweight – Shares same host OS kernel 
+VM uses hypervisor	containerisation tool is used ex: docker
+limited performance - Boot up time is more which is in minutes	Native performance - usually boot in seconds 
+Consumes dedicated resources means resources allocated to one VM can’t be used by another VM	Shares OS resources means only uses required amount of resources (cpu and RAM)
+Supports all OS	Supports on Linux
+host machine 
+
+            This is the machine in which docker is running / docker is installed
+
+Docker images 
+
+List images  - docker images  (OR) docker image ls
+Delete images  - docker rmi <image_name>:<tag> (OR) docker rmi <image_id>
+Delete multiple images  - docker rmi <image_name1>:<tag> <image_name2>:<tag>  
+Download an image - docker pull <image_id>
+  Create upload an image to docker registry 
+   1. Connect to the regisrty account 
+       docker login
+
+   2. Have a image with the private registry syntax 
+       docker tag <old_image> <username>/<repo_name>:<tag>
+       ex: docker tag ubuntu:latest harshajain/test_repo:v1
+       
+   3. Push the image to your regisrty 
+       docker push <username>/<repo_name>:<tag>
+
+Assignment - 2023-07-26
+Create a Docker hub account 
+Use Docker Login and log in to the above hub account created
+Practice Docker commands related to images  
+Docker containers 
+
+A container is a set of isolated processes and its resources in a host machine which is isolated from all the other process.
+Docker uses Linux features to achieve isolation by using namespaces, which allows processes to access only resources in that particular namespace, which allows having a process tree means set of processes that is completely independent of the rest of the systems processes and other processes.
+    
+Docker definition: A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.
+
+List running container in docker 
+        - docker ps 
+        - docker conatiner ls
+
+    List all the containers 
+        - docker ps -a 
+        - docker container ls -a
+
+    To delete a stoped container 
+        - docker rm <container_id>/<container_name>        
+
+    To delete a running container 
+        To stop gracefully and delete container
+        Way-1:
+        1. Stop the running container 
+            docker stop <container_id>
+
+        2. Then delete the container 
+            docker rm <container_id>
+
+        Way-2     
+            docker stop <container_id> | xargs -I{} docker rm {}    
+
+        Way-3
+            docker rm $(docker stop <container_id>)    
+
+        To delete container by forcefuly stopping the container 
+            docker rm -f <container_id>        
+
+    To get the list of id of running containers 
+        docker ps -q
+
+    To get the list of id of all the containers 
+        docker ps -aq
+    
+    To stop all running containers 
+        docker stop $(docker ps -q)
+
+    To delete all running container 
+        docker rm $(docker stop $(docker ps -q))
+
+    To forcefuly delete all running containers 
+        docker rm -f $(docker ps -q)    
+
+    To list all stopped/exited containers     
+        docker ps --filter "status=exited" -q
+
+    To delete all stopped containers 
+        docker container prune
+
+        Note: to bypass prompt (Y/N) - docker container prune -f     
+
+To stop, start, restart, pause containers     
+
+        docker stop <container_id1> <container_id2> .... <container_idn>
+        docker start <container_id1> <container_id2> .... <container_idn>
+        docker restart <container_id1> <container_id2> .... <container_idn>
+        docker pause <container_id1> <container_id2> .... <container_idn>
+
+Container creation (docker run)
+    docker run -it -d --name <container_name> <image_name>:<tag> <command>
+
+            -i - Interactive mode 
+            -t - enable tty in the terminal 
+            -d - To create container in detached mode (in background)
+            --name - To assign a custom name to the container 
+            --rm - Using this will automatically deletes the container when it stop/exited
+
+ 
+
+Assignment - 2023-07-27
+Practice docker container commands 
+create a container with custom name 
+Docker custom image / Dockerfile / Docker instructions 
+
+        Dockerfile is used to create custom images by using any stock image or other image as a base image.
+        In Dockerfile we can write some set of instructions to update any image.
+    
+        To create an image from Dockerfile
+            docker build -t <image_name>:<tag> .
+
+        To create an image from a specific Dockerfile a 
+            docker build -t <image_name>:<tag> -f /path/to/Dockerfile .  
+
+        -t 	Image name with tag which will be created from this Dockerfile
+          .	The period (.) at the end of the command represents the build context location. The build context includes all the files in the current directory and its subdirectories. These files are sent to the Docker daemon to be used during the build process.
+-f or --file                    	This flag is used to specify the location of the Dockerfile.
+FROM ubuntu
+        FROM is the first instruction in every Dockerfile
+        FROM is used to specify the base image on top which all the other 
+            instruction will run in the same Dockerfile.
+        FROM <image_name>:<tag>
+RUN 
+        Normal shell commands or the commands supported by the base image are executed using this instruction.
+        we can have n number of RUN in a single Dockerfile.
+        
+        Normal command format 
+            RUN <command>
+            
+        exec format 
+            RUN ['<command>','<param1>','<param2>']    
+            RUN ['apt','update']    
+            RUN ['apt','install','-y','git']    
+            RUN ['ls','-lrt']    
+COPY and ADD 
+        Both copy and add instruction is used to copy files and directories from 
+        host machine build location to the image and the container created from it.
+    
+        ADD supports extra source formats 
+          - If the source is a compressed file then ADD will automatically uncompress it in the destination.
+          - If the source is a downloadable link then ADD will automatically download the file in the destination.
+        COPY <source_path_from_build_context> <destination_inside_image>      
+        ADD <source_path_from_build_context> <destination_inside_image>      
+ 
+
+Assignment - 2023-07-28
+Complete demo COPY & ADD instruction difference.
+Create an Ubuntu custom image with all the required packages installed.
+        packages: git, jg
+Create an image from a container.
+        a. create a container 
+        b. login to the above container and create some files/directories 
+        c. Create an image from the above container.
+        d. create a second container from the above image 
+        e. The file created in the first container should exist in this container.
+
+ENV 
+       This instruction is used to set the environment variable inside the container. 
+       Using this instruction we can create env variables at build time which means in the docker images.
+        ex:
+            
+           1. For individual variable     
+              ENV <variable_name> <value>
+                 (OR)
+              ENV <variable_name>=<value>
+
+           2. For multiple variables
+               ENV <variable_name1>=<value1> <variable_name2>=<value2> .....
+
+To create environment variables at run time (means in containers)
+        1. With the docker run command 
+            docker run -e <variable_name>=<value> -e <variable_name>=<value>
+        2. With a list of variables in a file (.env file)
+            docker run --env-file <file_path> ...        
+
+ARG 
+       using this instruction we can pass parameters to Dockerfile as user inputs.
+        
+        ex: ARG <arg_variable_name>=<value>
+
+        Note: <value> acts as default value to the arg_variable means if user does not set 
+              the arg value at build time this value will be used.
+
+        To pass the value at build time 
+            docker build --build-arg <arg_variable_name>=<user_value>
+
+ CMD vs ENTRYPOINT 
+        - Both CMD and ENTRYPOINT are used to define the default execution command of the container (the command 
+             which will be executed in the container as main process).
+        - If we use multiple CMD or ENTRYPOINT in the same Dockerfile only the last one will 
+          be considered.
+        - If we use both CMD and ENTRYPOINT in the same Dockerfile, then ENTRYPOINT gets the 
+              highest priority and the command defined using CMD will be as parameters to ENTRYPOINT.
+
+        Difference 
+           - CMD can be completely overridden at the runtime (with docker run at the end we can provide 
+                the command to override the CMD). 
+           - ENTRYPOINT can't be overridden at the runtime but the command passed at the runtime 
+             will become parameters to ENTRYPOINT command defined in Dockerfile.
+        
+        Syntax: we can define command in 2 ways 
+            1. shell format 
+                  CMD "ls -lrt"
+        
+            2. EXEC format 
+               - Always the first element is a command.
+               - Except the first element all the other elements are parameters to command.
+
+                  CMD ["ls","-lrt"]  
+
+WORKDIR 
+        This is used to set the working directory for all the instructions that follow it.
+        such as RUN, CMD, ENTRYPOINT, COPY, ADD ....     
+           
+        ex: WORKDIR <path_in_container>
+
+IQ: 
+   What is the difference b/w CMD and ENTRYPOINT? 
+   What is the difference b/w COPY and ADD?
+   What is the difference b/w ENV and ARG?    
+
+Assignment - 2023-07-29
+How to override the ENTRYPOINT from the runtime
+Practice WORKDIR, ARG, ENV, CMD, ENTRYPOINT with the differences
+
+Docker Image (Layers) 
+The layer is a directory that contains a bunch of files that hold differences from the previous layer. Each one is separated, immutable, and read-only.
+
+A Docker image is a read-only template that contains a set of instructions for creating a container that can run on the Docker platform.
+A Docker Image is a set of layers where each layer represents an instruction from the Dockerfile. The number of image layers is always equal to the number of instructions used in the Dockerfile 
+Docker creates a container as a temporary R/W (Read-Write) layer on top of image R/O layers. If the container is deleted, all the data on the temporary layer will also be deleted.
+
+Summary 
+
+Base Image Layer:
+- The base image layer serves as the starting point for creating the Docker image. 
+- It contains the core operating system files and dependencies required for the software to run.
+- This layer is usually provided by the Docker Hub or another image registry and is the foundation upon which additional layers    are built.
+Application and Dependency Layers:
+Each additional step in the Dockerfile (the blueprint used to create the Docker image) results in a new layer being added to the image.
+Final Image Layer:
+The final image layer is the topmost layer of the Docker image, representing the state of the container when it's running which will be a temporary Read-Write layer.
+The layering system in Docker provides several advantages:
+
+Efficient Image Sharing: Since Docker images are composed of layers, when you pull an updated image, you only need to download the new layers that have changed, reducing the download size significantly.
+
+Caching: Docker can cache intermediate layers during the build process. If a layer already exists in the local cache, it doesn't need to be rebuilt, making subsequent builds faster.
+
+Versioning: Each layer has a unique identifier (digest), allowing Docker to identify and manage changes to the image effectively. When you update a layer, Docker only needs to update and store the modified layers, saving storage space.
+
+Docker volume 
+Bind mount 
+
+we mount a host location (file/directory) inside a container location    
+               docker -v <host_path>:<container_path>
+
+The changes made in the host will retain in a container and also changes made inside the container in this location will retain in the host 
+If the container is deleted host directory will not be deleted (data persistence).
+It is not preferable to mount a single directory to multiple containers. (multiple containers processes may try to write the data to the same file which is not possible)
+Volumes 
+
+They are docker-managed filesystems and we use docker commands to manage these volumes.
+Volumes are easier to manage, backup, and migrate than bind mounts.
+We can use different source filesystems called storage drivers (EBS, EFS, s3) 
+The default location of docker volume is /var/lib/docker/volumes/<volume_name>
+                        To create a docker volume 
+
+                                    docker  volume create <volume_name>         
+
+                        To delete volume 
+
+                                    docker volume rm <volume_name>
+
+                        To mount a volume 
+
+                                    docker -v <volume_name>:<container_path>
+
+Docker EFS mount
+
+Mount AWS EFS docker volume to a container.
+
+      docker volume create \
+            --driver local \
+            --opt type=nfs \
+            --opt o=addr=fs-0b0e3aa3ba59955ac.efs.ap-south-1.amazonaws.com,rw,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 \
+            --opt device=:/ efs 
+
+                            To test create a file in the container 
+
+                                    while true; do echo "Dummy data" >> test.txt; done
+
+Assignment - 2023-07-31
+Try learning the below Dockerfile instructions 
+    - LABEL
+    - USER
+    - ONBUILD
+    - RUN vs SHELL 
+    - MAINTAINER
+Work on Docker volumes
+Work on Bind Mounts
+Try to mount the Docker EBS volume to a container
+
+Docker networking 
+    Publish 
+    Publish will bind the container application port to the host machine port so that 
+    we can access from the outside world with the host machine port.
+
+    Publish = port mapping of container to host machine + Expose 
+    
+    To publish a port         
+        docker run -p <host_port>:<container_port>
+    
+    To publish all the exposed ports 
+        docker run -P 
+        -P publish_all, It binds all the exposed ports of the container to the host machine. 
+    
+    To map a direct IP address to the host 
+        port to port 
+            docker run -p <ip>:<host_port>:<container_port>    
+        Any to port 
+            docker run -p <ip>:<container_port>    
+    
+    Range of ports 
+        many to many 
+            docker run -p 8080-8085:8086-8090
+            Note: The total number of host ports in the range should be the same as the container port range
+        many to one
+            docker run -p 8080-8090:8080
+            This will map to any one of the host ports which is free
+
+    Docker network types 
+    1. Bridge 
+        - This is a private internal network created by docker on the host machine 
+          by name docker0    
+        - This is the default network type for all the containers which are created 
+         without any network configurations.
+        - By default, all the containers in the same bridge can communicate with 
+          each other without any extra configuration.    
+        - We cannot use container name for communication only IP address is allowed in 
+          default bridge.
+
+        Custom bridge 
+            To create a bridge network 
+                docker network create --driver bridge my_bride 
+            
+            - In custom bridge containers can communicate with each other with container 
+              name and also with the IP address.
+    
+
+        Example: 
+            
+            bridge      nginx1 - 172.17.0.2  nginx2 - 172.17.0.3
+            my_bridge   nginx3 - 172.18.0.2  nginx4 - 172.18.0.3    
+
+            Check Ping
+                   1) Check can we ping by the name 
+                       
+                   2) Check bridge-to-bridge communication 
+                       ap1 -> ap3 or ap4 
+ 
+
+Assignment - 2023-08-01
+How to have communication b/w containers which are in 2 different bridge networks.
+How to create an image from a container ? 
+What is docker save, load, export, and import?
+Host           
+        - This driver removes the network isolation between the docker and the host.
+        - The containers are directly connected to the host machine network without  
+          the extra layer of any docker network.
+        - Shares the same TCP.IP stack and the same namespace as the host machine.  
+        - All the network interfaces which are there in the host machine are 
+          accessible by this container.
+
+        Network Namespace Sharing: The container shares the same network namespace as the host. It can directly access the network interfaces and services available on the host without any additional isolation.
+        
+        Port Binding: Ports exposed by the container are directly bound to the host's network interfaces. This means that services running within the container can be accessed on the same ports as if they were running on the host.
+        
+        Host's IP Address: The container uses the host's IP address, making it appear as if the container's services are running on the host itself.
+
+   None 
+        - Containers are not attached to any network by docker.
+        - All the required network configurations need to be done 
+          manually.
+        - The host or any other containers won't be able to communicate 
+          with this container until a custom network is configured.
+        USE CASE:
+        Running a container for debugging purposes where network access is not needed.
+        Creating a container for building or compiling code that doesn't require internet access.
+        Running a container that acts as a data volume container, where network communication is unnecessary.
+
+Overlay 
+        - Overlay networks are meant to define network communication of containers hosted on different host machines. 
+        - To create such a network we use the ‘overlay’ driver. 
+        - The overlay driver is a native driver by docker that helps to create a single layer2 broadcast domain across containers 
+          hosted on multiple Docker host machines. 
+
+States of container / Lifecycle of container
+
+    1. Created - if a container is newly created and the container is not yet started.
+    2. Running - A currently running container. It means there is no problem 
+                 with the container to run the process.
+    3. Exited - A container ran and completed execution with failure.
+    4. paused - A container whose process has been paused. (we can unpause the container)
+    5. Dead - if the docker daemon tried and failed to stop a container (host ram full)
+    6. Restarting - the container will be in the phase of restarting the main process.
+
+Benefits of Docker
+
+Flexible: Complex applications can be divided and containerized into small components called microservices
+Lightweight: Containers share the machine’s OS system kernel and therefore do not require an OS per application, driving higher server efficiencies and reducing server and licensing costs
+portable:  we can build images anywhere and then deploy them to the cloud, and run them anywhere.    
+Isolation: Docker containers offer a portable, isolated environment for software to execute in, making sure that each container runs without interfering with the operations of other containers or the host system.
+Resource Efficiency: When compared to running separate virtual machines (VMs), containers share the host system's kernel, which lowers overhead. This increases the resource efficiency of Docker and allows for a higher application density on a single host.
+DevOps Integration: Docker supports seamless integration of development and operations (DevOps) workflows. Developers can use the same environment throughout the development and deployment lifecycle, leading to smoother collaboration.
+Continuous Integration and Continuous Deployment (CI/CD): By providing dependable and consistent builds, testing, and deployments, Docker streamlines CI/CD pipelines. Containers are simple to include in CI/CD workflows, resulting in quicker feedback and delivery cycles.
+Docker Architecture
+
+Docker Architecture | How Docker Works? | Edureka
+    Docker Daemon 
+        - A background process that manages docker images, containers, network, and volumes.
+        - This Daemon constantly listens for docker API requests and processes them.
+    
+    Docker REST API 
+        - API which is used by applications to interact with the docker daemon. 
+        
+    Docker CLI 
+        - It is a command line interface for interacting with the docker daemon through REST API.
+    
+    Docker Objects 
+        - Images, Containers, Networks, Volumes
+
+Namespaces and cgroups
+    - Docker uses Linux namespaces to provide isolated workspace for processes called container
+    - when a container is created, docker creates a set of namespaces for it and provides 
+      a layer of isolation for the container.
+    - Each container run in a different namespace 
+    
+    namespaces (To list - lsns)
+        pid - namespace for managing processes (process isolation)
+        user - namespace for non-root user on linux.
+        uts - namespace for unix timesharing system which isolates kernel and version identifiers,
+              time bonding of process.
+        ipc - (interprocess communication) namespace for managing the process communication.      
+        mnt - namespace for managing filesystem mounts.
+        net - namespace for managing network interfaces.
+    cgroups (To list - lscgroup)
+            - Linux OS uses cgroups to manage the available hardware resources such as CPU, RAM, Disk, I/O.
+            - we can control the access and also we can apply the limitations 
+            - Linux location to cgroups config file (/sys/fs/cgroup)
+
+Kubernetes 
+
+Kubernetes, often abbreviated as K8s (since there are 8 letters between 'K' and 's')
+K8S is an open-source container orchestration platform. It was originally developed by Google and is now maintained by the Cloud Native Computing Foundation (CNCF). 
+Kubernetes is designed to automate the deployment, scaling, and management of containerized applications.
+In our company, we are using Kubernetes to handle Docker.
+Key features of Kubernetes include:
+
+Container Orchestration
+Scalability
+High Availability
+Self-Healing
+Service Discovery and Load Balancing
+Automated Rollouts and Rollbacks
+Secrets and Configuration Management
+Feature	Kubernetes	Docker Swarm
+Scalability	Highly scalable, supports large architectures	Scalable, but limited compared to Kubernetes
+Load Balancing	Advanced load balancing capabilities	Automated load balancing
+Deployment Options	Extensive options for application deployment and can be deployed on-premises, in the cloud, or in hybrid environments	Limited deployment options and can be deployed on-premises or in the cloud
+Learning Curve / Complexity	Steep learning curve due to its complexity and extensive features. Complexity - HIGH	Beginner-friendly load-balancing with a relatively lower learning curve. Complexity - LOW
+Operating Systems	Supports all major operating systems	Limited to Linux distributions
+Container Management	Manages complex workloads with advanced container management capabilities	Provides basic container management functionality
+Ecosystem/Community	Has a large community and thriving ecosystem with a wide range of tools and plugins	A smaller ecosystem with fewer tools and plugins available
+
+Multistage build 
+    How to optimise the docker build process?
+    How to reduce the size of the docker image or container?
+
+    After the docker 1.6 version, docker released this option.
+    1. There are 2 problems with the normal build process 
+            1. Size: the challenge is to keep the image and its container size as minimal as          
+               possible.
+            2. The larger the surface area more the application is vulnerable to attacks. 
+    
+        - Multistage build allows us to define multiple FROM in the same Dockerfile.
+        - Dependency between multiple FROM is maintained by naming FROM using 
+          AS keyword and we can refer to this name in another FROM.
+
+                FROM <base_image> AS <STAGE_NAME>
+                
+        - Only the final FROM image is created leaving back all the other FROM images/stages.
+        - Copy only the required files from the named FROM stage like below.
+                FROM final_build
+                COPY --from <STAGE_NAME> <src_named_stage> <dest>
+    
+    2. Always try to use the slim/alpine/scratch version of the base image instead 
+       of using the fully loaded latest base image.
+
+Docker compose 
+Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application’s services. Then, with a single command, you create and start all the services from your configuration.
+
+Blue-Green Deployment 
+        - We keep 2 sets of similar environments in which one will be live called blue environment and the one which is not live is called green. 
+        - we update the new changes to the green environment first which is not live and we swap/ redirect the traffic from the blue to green environment.
+        - Finally current green environment with new updates we rename it as blue and the current blue environment is renamed as green we use this for the next release deployment.
+
+Canary Deployment 
+        - A canary release is a software testing technique used to reduce the risk of introducing a new software version into production by gradually rolling out the change to a small subgroup of users, before rolling it out to the entire platform/infrastructure.      
+
+Jenkins Shared Library
+
+Jenkins Shared Library is the way of having a common pipeline code in the version control system which is git that can be called by any number of pipeline jobs just by referring to it in the pipeline code using @Library("<library_name>")_
+
+Steps to setup Jenkins Shared Library
+
+1. Create a git repo for shared library 
+
+     - Create a folder by name vars 
+
+2. Create .groovy file inside vars folder and put shared library code here 
+   - Make sure to remember and provide a meaningful name for groovy 
+   - Groovy filename is used as the function call
+
+3. Integrated it with Jenkins 
+   - Manage Jenkins > System > Global Pipeline Libraries
+          Name - Can give any name, we can call it in any job using this @Library("<name>")_
+          Default Version - git branch in which we keep our shared library 
+          Retrieval method - Modren SCM 
+          Source Code Management - Git
+
+4. To call a shared library function / Groovy script 
+   - use the name of the script in the pipeline job (Jenkinsfile)
+       example: 
+               gitCheckout('main',
+                           'itd_jenkins', 
+                           'https://github.com/jaintpharsha/Devops-ITD-May-2023.git')
+
+Repo: https://github.com/jaintpharsha/jenkins-shared-library-May-2023.git
+
+
